@@ -1,8 +1,8 @@
 package server
 
 import (
-	"encoding/json"
-	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/aAmer0neee/test-wallet-api/pkg/domain"
 	"github.com/aAmer0neee/test-wallet-api/pkg/service"
@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func InitServer(service *service.Service)(*Server){
+func InitServer(service *service.Service) *Server {
 	return &Server{
 		router:  gin.Default(),
 		service: service,
@@ -29,47 +29,46 @@ func (s *Server) Up(port string) {
 	s.initRoutes()
 
 	gin.SetMode(gin.ReleaseMode)
-	s.router.Run(port)
+
+	if err := s.router.Run(port); err != nil {
+		log.Fatalf("error %v", err)
+	}
+
 }
 
 func (s *Server) initRoutes() {
 
-	s.router.GET("/api/v1/wallets/:WALLET_UUID", s.inquiryBalance)
+	s.router.GET("/api/v1/wallets/:WALLET_UUID", s.inquiryHandler)
 
-	s.router.POST("api/v1/wallet", s.changeBalance)
+	s.router.POST("api/v1/wallet", s.changeHandler)
 }
 
-func (s *Server) inquiryBalance(ctx *gin.Context) {
+func (s *Server) inquiryHandler(ctx *gin.Context) {
 
 	walletID, _ := uuid.Parse(ctx.Param("WALLET_UUID"))
-	rBody := domain.Transaction{
+	requestBody := domain.Transaction{
 		WalletId:      walletID,
 		OperationType: "INQUIRY",
 		Amount:        0,
 	}
 
-	wallet := s.service.InquiryWallet(rBody)
-	balance := json.NewEncoder(ctx.Writer)
-	balance.SetIndent("", "  ")
-	balance.Encode(wallet)
+	wallet := s.service.InquiryWallet(ctx.Request.Context(), requestBody)
+
+	ctx.JSON(http.StatusOK, wallet)
 }
 
-
-func (s *Server) changeBalance(ctx *gin.Context) {
+func (s *Server) changeHandler(ctx *gin.Context) {
 	requestBody := domain.Transaction{}
 
-	ctx.ShouldBindBodyWithJSON(&requestBody)
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
+		log.Printf("errorr binding request %s", err.Error())
+	}
 
 	switch requestBody.OperationType {
 
-	case "DEPOSIT":
-		s.service.DepositWallet()
-
-	case "WITHDRAW":
-		s.service.WithdrawWallet()
-
+	case "DEPOSIT", "WITHDRAW":
+		s.service.ChangeWallet(ctx.Request.Context(), requestBody)
 	default:
-		fmt.Println("invalid operation tipe for change wallet method")
-
+		log.Printf("invalid change wallet method '%s'", requestBody.OperationType)
 	}
 }

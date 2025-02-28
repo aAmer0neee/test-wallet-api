@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"log"
+	"time"
 
+	"github.com/aAmer0neee/test-wallet-api/pkg/domain"
 	"github.com/aAmer0neee/test-wallet-api/pkg/repository"
 	"github.com/aAmer0neee/test-wallet-api/pkg/server"
 	"github.com/aAmer0neee/test-wallet-api/pkg/service"
@@ -16,17 +18,23 @@ var (
 
 func main() {
 	database, err := sql.Open("postgres", "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable")
+	
+	database.SetMaxOpenConns(100)
+	database.SetMaxIdleConns(10) 
+	database.SetConnMaxLifetime(30 * time.Minute) 
 
 	if err != nil {
-		log.Fatalf("error %v", err.Error())
+		log.Fatalf("error opening database %v", err.Error())
 	}
 	defer database.Close()
 
 	if err := database.Ping(); err != nil {
-		log.Fatalf("error %v", err.Error())
+		log.Fatalf("error ping database %v", err.Error())
 	}
 
-	repo := repository.InitRepository(database)
+	cacheWallets := domain.InitCache()
+
+	repo := repository.InitRepository(database, cacheWallets)
 
 	service := service.InitService(repo)
 
