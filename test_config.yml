@@ -1,0 +1,14 @@
+#test file for artilery
+config:
+  target: 'http://localhost:8080'
+  phases:
+    - duration: 10
+      arrivalRate: 5000
+scenarios:
+  - flow:
+      - post:
+          url: '/api/v1/wallet'
+          json:
+            walletId: '996735fb-012c-4743-8166-5bcb6039d3b3'
+            operationType: 'DEPOSIT'
+            amount: 100

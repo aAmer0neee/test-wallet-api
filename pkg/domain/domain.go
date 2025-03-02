@@ -40,11 +40,11 @@ func InitCache()(* CachedWallets){
 }
 
 func (cw *CachedWallets) GetWallet(id uuid.UUID) (*Wallet, bool) {
+	
 	value, ok := cw.wallets.Load(id)
 	if !ok || value == nil {
 		return nil, false
 	}
-
 	wallet, ok := value.(*Wallet)
 	if !ok {
 		return nil, false
@@ -52,9 +52,9 @@ func (cw *CachedWallets) GetWallet(id uuid.UUID) (*Wallet, bool) {
 	return wallet, true
 }
 
-func (cw *CachedWallets) AddWallet(id uuid.UUID, value *Wallet) {
-	if value == nil {
+func (cw *CachedWallets) AddWallet(id uuid.UUID, wallet *Wallet) {
+	if wallet == nil {
 		return
 	}
-	cw.wallets.Store(id, value)
+	cw.wallets.Store(id, wallet)
 }

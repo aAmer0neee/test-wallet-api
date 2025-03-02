@@ -5,18 +5,17 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST_AUTH_METHOD: trust
-    volumes: 
+    volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
-      retries: 5
-      timeout: 5s
+    restart: always
+    command: >
+      postgres -c shared_buffers=1GB
+              -c work_mem=64MB
+              -c maintenance_work_mem=256MB
 
   server:
     build: ./
@@ -25,8 +24,8 @@ services:
     ports: 
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
+        
     networks:
       - app-network
 

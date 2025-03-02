@@ -3,11 +3,11 @@ package server
 import (
 	"log"
 	"net/http"
-
 	"github.com/aAmer0neee/test-wallet-api/pkg/domain"
 	"github.com/aAmer0neee/test-wallet-api/pkg/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	/* "time" */
 )
 
 type (
@@ -65,10 +65,11 @@ func (s *Server) changeHandler(ctx *gin.Context) {
 	}
 
 	switch requestBody.OperationType {
-
+		
 	case "DEPOSIT", "WITHDRAW":
-		s.service.ChangeWallet(ctx.Request.Context(), requestBody)
+		s.service.ChangeWallet(ctx.Request.Context() , requestBody)
 	default:
 		log.Printf("invalid change wallet method '%s'", requestBody.OperationType)
 	}
+
 }
